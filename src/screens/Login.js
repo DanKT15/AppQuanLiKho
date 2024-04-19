@@ -18,6 +18,9 @@ export default function Login ({ navigation }) {
     }
 
     try {
+
+      // console.log(`${URL}/api/login`);
+
       const response = await axios.post(`${URL}/api/login`, {email: email, password: pass},
       { 
         Headers: {
@@ -32,7 +35,6 @@ export default function Login ({ navigation }) {
         return Alert.alert("Đăng nhập thất bại, vui lòng kiểm tra lại thông tin");
       } else {
         const savekey = await store.storeData(response.data.token);
-        Alert.alert("Đăng nhập thành công");
         return signIn({ token: response.data.token });
       }
 

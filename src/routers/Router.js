@@ -1,17 +1,20 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import React, { useEffect, useReducer, useMemo } from 'react';
-import { Button } from 'react-native';
+import { Text, Pressable, StyleSheet } from 'react-native';
 import Home from '../screens/Home';
 import scanner from '../screens/scanner';
 import Login from "../screens/Login";
 import store from "../Security/AsyncStorage";
 import axios from 'axios';
-import { URL } from 'react-native-dotenv';
+import {URL} from 'react-native-dotenv';
 import { AuthContext } from "../Context/Context";
 
 const Router = () => {
 
   const Stack = createNativeStackNavigator();
+  const Tab = createBottomTabNavigator();
 
   const [state, dispatch] = useReducer(
     (prevState, action) => {
@@ -44,11 +47,23 @@ const Router = () => {
       let userToken;
 
       try {
+        // console.log(`${URL}/api/info`);
+        const response = await axios.get(`${URL}/api/info`, 
+        { 
+          Headers: {
+            "Accept": "application/json",
+            "Content-Type" : "application/json",
+            "Access-Control-Allow-Origin": "*",
+          }
+        });
 
-        userToken = await store.getData();
-
-        if (userToken !== false) {
-          return dispatch({ type: 'RESTORE_TOKEN', token: userToken });
+        if (response.data.errors === 1) {
+          const delkey = await store.delData();
+          return dispatch({ type: 'SIGN_OUT' });
+        }
+        else {
+          const saveNew = await store.storeData(response.data.token);
+          return dispatch({ type: 'RESTORE_TOKEN', token: response.data.token });
         }
 
       } catch (e) {
@@ -81,37 +96,63 @@ const Router = () => {
     },
   }), []);
 
+  const Authcompoment = (
+    <Stack.Navigator>
+      <Stack.Screen name="Login" component={ Login }/>
+    </Stack.Navigator>
+  );
+
+  const Homecompoment = (
+    <Tab.Navigator>
+      <Tab.Screen name="Home" component={ Home }
+        options={{
+          tabBarLabel: 'Home',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="home" color={color} size={size} />
+          ),
+          headerRight: () => (
+            <Pressable style={styles.button} onPress={() => authContext.signOut()}>
+              <Text style={styles.text}>Logout</Text>
+            </Pressable>
+          ),
+        }}
+      />
+
+      <Tab.Screen name="Scanner" component={ scanner } 
+        options={{ 
+          tabBarLabel: 'Scanner',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="scan-helper" color={color} size={size} />
+          ),
+        }}
+      /> 
+    </Tab.Navigator>
+  );
+
   return(
     <AuthContext.Provider value={authContext}>
-      <Stack.Navigator>
-
-        {state.userToken == null ? (
-          <Stack.Screen name="Login" component={ Login }
-            options={{
-              headerRight: () => (
-                <Button onPress={() => authContext.signOut()} title="Logout" color="#f4511e"/>
-              ),
-            }}   
-          />
-        ) : (
-          <>
-            <Stack.Screen name="Home" component={ Home }
-              options={{
-                headerRight: () => (
-                  <Button onPress={() => authContext.signOut()} title="Logout" color="#f4511e"/>
-                ),
-              }}
-            />
-
-            <Stack.Screen name="scanner" component={ scanner }/> 
-          </>
-        )}
-
-      </Stack.Navigator>
+      {state.userToken == null ? Authcompoment : Homecompoment}
     </AuthContext.Provider>
   );
 };
 
 export default Router;
 
-// screenOptions={{ headerShown: false }}
+const styles = StyleSheet.create({
+  button: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 4,
+    elevation: 3,
+    backgroundColor: 'white',
+  },
+  text: {
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: 'bold',
+    letterSpacing: 0.25,
+    color: 'black',
+  },
+});

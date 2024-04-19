@@ -10,23 +10,12 @@ export default function Home ({ navigation, route }) {
   }, [route.params?.code])
 
   return (
-
-    <View style={styles.container}> 
-            
+    <View style={styles.container}>   
       <Text>Home Screen</Text>
-      <Button
-        title="Scanner QR"
-        onPress={() =>
-          navigation.navigate('scanner')
-        }
-      />
-
     </View>
-
   );
 
 }
-
 
 const styles = StyleSheet.create({
   container: {
