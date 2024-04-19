@@ -30,6 +30,8 @@ export default function Login ({ navigation }) {
         }
       });
 
+      console.log(response.data);
+
       if (response.data.errors === 1) {
         console.log(response.data.message);
         return Alert.alert("Đăng nhập thất bại, vui lòng kiểm tra lại thông tin");

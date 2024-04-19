@@ -57,6 +57,8 @@ const Router = () => {
           }
         });
 
+        console.log(response.data);
+
         if (response.data.errors === 1) {
           const delkey = await store.delData();
           return dispatch({ type: 'SIGN_OUT' });
