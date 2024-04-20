@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View, Button } from "react-native";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { CameraView, Camera } from "expo-camera/next";
 
 export default function QrScanner({ navigation }) {
@@ -14,10 +14,6 @@ export default function QrScanner({ navigation }) {
     };
     getCameraPermissions();
   }, []);
-
-  // const Sendcode = useMemo(() => {
-
-  // }, [dataQR]);
 
   if (hasPermission === null) {
     return (
@@ -42,8 +38,8 @@ export default function QrScanner({ navigation }) {
     setQR(result);
   };
 
-  return (
-    <View style={styles.container}>
+  const scanner = (
+    <>
       <CameraView
         onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
         style={StyleSheet.absoluteFillObject}
@@ -54,6 +50,23 @@ export default function QrScanner({ navigation }) {
           <Button title={"Back to home"} onPress={() => navigation.navigate('Home', {code: dataQR})} />
         </View>
       )}
+    </>
+  );
+
+  const phieunhap = (
+    <>
+      <Text>phiếu nhập hàng</Text>
+      <Text>data: {dataQR}</Text>
+      <Button title={"To go back"} onPress={() => {
+        setQR(null);
+        setScanned(false);
+      }}></Button>
+    </>
+  );
+
+  return (
+    <View style={styles.container}>
+      {scanned == false ? scanner : phieunhap}
     </View>
   );
 }
