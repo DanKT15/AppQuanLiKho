@@ -64,6 +64,7 @@ const Router = () => {
           return dispatch({ type: 'SIGN_OUT' });
         }
         else {
+          const delkey = await store.delData();
           const saveNew = await store.storeData(response.data.token);
           return dispatch({ type: 'RESTORE_TOKEN', token: response.data.token });
         }

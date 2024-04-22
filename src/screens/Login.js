@@ -18,14 +18,12 @@ export default function Login ({ navigation }) {
     }
 
     try {
-
       // console.log(`${URL}/api/login`);
-
       const response = await axios.post(`${URL}/api/login`, {email: email, password: pass},
       { 
         Headers: {
           "Accept": "application/json",
-          "Content-Type" : "application/x-www-form-urlencoded",
+          "Content-Type" : "application/json",
           "Access-Control-Allow-Origin": "*",
         }
       });
