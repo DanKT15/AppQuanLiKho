@@ -8,7 +8,7 @@ import scanner from '../screens/scanner';
 import Login from "../screens/Login";
 import store from "../Security/AsyncStorage";
 import axios from 'axios';
-import {URL} from 'react-native-dotenv';
+import {pathURL} from 'react-native-dotenv';
 import { AuthContext } from "../Context/Context";
 
 const Router = () => {
@@ -22,21 +22,25 @@ const Router = () => {
         case 'RESTORE_TOKEN':
           return {
             ...prevState,
+            permission: action.permission,
             userToken: action.token,
           };
         case 'SIGN_IN':
           return {
             ...prevState,
+            permission: action.permission,
             userToken: action.token,
           };
         case 'SIGN_OUT':
           return {
             ...prevState,
+            permission: null,
             userToken: null,
           };
       }
     },
     {
+      permission: null,
       userToken: null,
     }
   );
@@ -47,8 +51,8 @@ const Router = () => {
       let userToken;
 
       try {
-        // console.log(`${URL}/api/info`);
-        const response = await axios.get(`${URL}/api/info`, 
+        console.log(`${pathURL}/api/info`);
+        const response = await axios.get(`${pathURL}/api/info`, 
         { 
           Headers: {
             "Accept": "application/json",
@@ -66,7 +70,7 @@ const Router = () => {
         else {
           const delkey = await store.delData();
           const saveNew = await store.storeData(response.data.token);
-          return dispatch({ type: 'RESTORE_TOKEN', token: response.data.token });
+          return dispatch({ type: 'RESTORE_TOKEN', permission: response.data.permission, token: response.data.token });
         }
 
       } catch (e) {
@@ -78,9 +82,9 @@ const Router = () => {
   }, []);
 
   const authContext = useMemo(() => ({
-    signIn: (data) => dispatch({ type: 'SIGN_IN', token: data.token }),
+    signIn: (data) => dispatch({ type: 'SIGN_IN', permission: data.permission, token: data.token }),
     signOut: async () => {
-      const response = await axios.post(`${URL}/api/logout`, 
+      const response = await axios.post(`${pathURL}/api/logout`, 
       { 
         Headers: {
           "Accept": "application/json",
@@ -107,7 +111,10 @@ const Router = () => {
 
   const Homecompoment = (
     <Tab.Navigator>
-      <Tab.Screen name="Home" component={ Home }
+
+      {state.permission == "quantri" ? (
+
+        <Tab.Screen name="Home" component={ Home }
         options={{
           tabBarLabel: 'Home',
           tabBarIcon: ({ color, size }) => (
@@ -118,17 +125,26 @@ const Router = () => {
               <Text style={styles.text}>Logout</Text>
             </Pressable>
           ),
-        }}
-      />
+          }}
+        />
 
-      <Tab.Screen name="Scanner" component={ scanner } 
+
+      ) : (
+        <Tab.Screen name="Scanner" component={ scanner } 
         options={{ 
           tabBarLabel: 'Scanner',
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="scan-helper" color={color} size={size} />
           ),
-        }}
-      /> 
+          headerRight: () => (
+            <Pressable style={styles.button} onPress={() => authContext.signOut()}>
+              <Text style={styles.text}>Logout</Text>
+            </Pressable>
+          ),
+          }}
+        /> 
+      )}
+      
     </Tab.Navigator>
   );
 

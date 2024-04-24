@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { StyleSheet, Text, View, TextInput, Alert, TouchableOpacity } from 'react-native';
 import store from "../Security/AsyncStorage";
 import axios from 'axios';
-import {URL} from 'react-native-dotenv';
+import {pathURL} from 'react-native-dotenv';
 import { AuthContext } from "../Context/Context";
 
 export default function Login ({ navigation }) {
@@ -18,8 +18,8 @@ export default function Login ({ navigation }) {
     }
 
     try {
-      // console.log(`${URL}/api/login`);
-      const response = await axios.post(`${URL}/api/login`, {email: email, password: pass},
+      // console.log(`${pathURL}/api/login`);
+      const response = await axios.post(`${pathURL}/api/login`, {email: email, password: pass},
       { 
         Headers: {
           "Accept": "application/json",
@@ -35,7 +35,7 @@ export default function Login ({ navigation }) {
         return Alert.alert("Đăng nhập thất bại, vui lòng kiểm tra lại thông tin");
       } else {
         const savekey = await store.storeData(response.data.token);
-        return signIn({ token: response.data.token });
+        return signIn({ permission: response.data.permission, token: response.data.token });
       }
 
     } catch (error) {
