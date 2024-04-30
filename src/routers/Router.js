@@ -1,11 +1,11 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import React, { useEffect, useReducer, useMemo } from 'react';
+import React, { useEffect, useReducer, useMemo, useState } from 'react';
 import { Text, Pressable, StyleSheet } from 'react-native';
 import Home from '../screens/Home';
-import scanner from '../screens/scanner';
 import Login from "../screens/Login";
+import Scanner from '../screens/Scanner';
 import store from "../Security/AsyncStorage";
 import axios from 'axios';
 import {pathURL} from 'react-native-dotenv';
@@ -69,7 +69,7 @@ const Router = () => {
         }
         else {
           const delkey = await store.delData();
-          const saveNew = await store.storeData(response.data.token);
+          const savekey = await store.storeData(response.data.token);  
           return dispatch({ type: 'RESTORE_TOKEN', permission: response.data.permission, token: response.data.token });
         }
 
@@ -130,19 +130,21 @@ const Router = () => {
 
 
       ) : (
-        <Tab.Screen name="Scanner" component={ scanner } 
-        options={{ 
-          tabBarLabel: 'Scanner',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="scan-helper" color={color} size={size} />
-          ),
-          headerRight: () => (
-            <Pressable style={styles.button} onPress={() => authContext.signOut()}>
-              <Text style={styles.text}>Logout</Text>
-            </Pressable>
-          ),
-          }}
-        /> 
+        <>
+          <Tab.Screen name="Scanner" component={Scanner} 
+            options={{ 
+              tabBarLabel: 'Scanner',
+              tabBarIcon: ({ color, size }) => (
+                <MaterialCommunityIcons name="scan-helper" color={color} size={size} />
+              ),
+              headerRight: () => (
+                <Pressable style={styles.button} onPress={() => authContext.signOut()}>
+                  <Text style={styles.text}>Logout</Text>
+                </Pressable>
+              ),
+              }}
+          />
+        </>
       )}
       
     </Tab.Navigator>

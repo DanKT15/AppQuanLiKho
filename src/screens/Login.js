@@ -34,7 +34,7 @@ export default function Login ({ navigation }) {
         console.log(response.data.message);
         return Alert.alert("Đăng nhập thất bại, vui lòng kiểm tra lại thông tin");
       } else {
-        const savekey = await store.storeData(response.data.token);
+        const savekey = await store.storeData(response.data.token);  
         return signIn({ permission: response.data.permission, token: response.data.token });
       }
 

@@ -1,19 +1,20 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const storeData = async (value) => {
     try {
-      await AsyncStorage.setItem('my-key', value);
+      const savekey = await AsyncStorage.setItem('key', value)
     } catch (e) {
-        console.error(e);
+      console.error(e);
     }
 };
 
 const getData = async () => {
     try {
-      const value = await AsyncStorage.getItem('my-key');
+      const jsonValue = await AsyncStorage.getItem('key')
 
-      if (value !== null) {
-        return value;
+      if (jsonValue !== null) {
+        return jsonValue;
       }
       else {
         return false;
@@ -26,10 +27,10 @@ const getData = async () => {
 
 const delData = async () => {
   try {
-    const value = await AsyncStorage.getItem('my-key');
+    const jsonValue = await AsyncStorage.getItem('key')
 
-    if (value !== null) {
-      await AsyncStorage.removeItem('my-key');
+    if (jsonValue !== null) {
+      const del = await AsyncStorage.removeItem('key');
     }
     
   } catch (e) {
