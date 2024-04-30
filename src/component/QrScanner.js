@@ -1,17 +1,23 @@
-import { StyleSheet, Text, View, Button } from "react-native";
+import { StyleSheet, Text, View, Button, Alert } from "react-native";
 import { useEffect, useState } from "react";
 import { CameraView, Camera } from "expo-camera/next";
 
 export default function QrScanner(props) {
   const [hasPermission, setHasPermission] = useState(null);
-  const [scanned, setScanned] = useState(false);
+  const [scanned, setScanned] = useState(props.scanned);
   const [dataQR, setQR] = useState(null);
 
   useEffect(() => {
+
+    if (props.messscanned !== null) {
+      Alert.alert(props.messscanned);
+    }
+
     const getCameraPermissions = async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
       setHasPermission(status === "granted");
     };
+
     getCameraPermissions();
   }, []);
 
@@ -39,7 +45,6 @@ export default function QrScanner(props) {
   };
 
   const handleNext = () => {
-    setScanned(false);
     props.setdataQR(dataQR);
     props.setcheck(true);
   };
@@ -53,8 +58,8 @@ export default function QrScanner(props) {
       {scanned && (
         <View>
           <Text style={styles.Text}>Data: {dataQR}</Text>
-          {/* <Button title={"Tap to Scan Again"} onPress={() => setScanned(false)} /> */}
           <Button title={"Tap to Next"} onPress={handleNext} />
+          <Button title={"Tap to scanner again !"} onPress={() => setScanned(false)} />
         </View>
       )}
     </View>

@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useContext } from 'react';
-import { View, Text, Button, StyleSheet, FlatList, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, Button, StyleSheet, Alert, ScrollView } from 'react-native';
+import DropDownPicker from 'react-native-dropdown-picker';
 import axios from 'axios';
 import store from "../Security/AsyncStorage";
 import {pathURL} from 'react-native-dotenv';
@@ -14,7 +15,7 @@ function Listsp ({ id, nameSP, Soluong, updateData }) {
   };
 
   const decrementQuantity = () => {
-    if (quantity > 0) {
+    if (quantity > 1) {
       setQuantity(quantity - 1);
       updateData(id, quantity - 1);
     }
@@ -37,6 +38,10 @@ export default function Phieu (props) {
 
   const [Data, setData] = useState(props.dataSP);
 
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(null);
+  const [items, setItems] = useState(props.diachiSP);
+
   const updateData = (id, updatedsoluong) => {
     setData(Data.map((item) => {
       if (item.id === id) {
@@ -54,8 +59,9 @@ export default function Phieu (props) {
       props.AddDataSP(e.id, e.title, e.soluong);
     });
 
+    props.setScanned(false);
+    props.setdataQR(null);
     props.setcheck(false);
-
   };
 
   useEffect(() => {
@@ -63,20 +69,19 @@ export default function Phieu (props) {
     const checkItem = () => {
 
       const Sanpham = props.dataSP;
+      const idsp = props.dataQR;
+      let newidsp = idsp.replace(/"/g, '');
+      let check = true;
 
-      // const id = props.dataQR;
+      Sanpham.map(
+        (e) => {
+          if (e.id_sp == newidsp) {
+            check = false;
+          } 
+        }
+      );
 
-      // Sanpham.map((e) => {
-      //   if (e.id === id) {
-      //     console.log(e)
-      //     return false;
-      //   }
-      // });
-
-      console.log(Sanpham);
-
-      return true;
-
+      return check;
     };
 
     const hanld = async () => {
@@ -98,32 +103,95 @@ export default function Phieu (props) {
           console.log(response.data.message);
         }
         else {
-          setData([...Data, {id: response.data.Sanpham.MASP, title: response.data.Sanpham.TENSP, soluong: 0}]);
+          setData([...Data, {id: response.data.Sanpham.MASP, title: response.data.Sanpham.TENSP, soluong: 1}]);
         }
     }
 
-    if (checkItem()) {
+    const check = checkItem();
+
+    if (check === true) {
       hanld();
     }
     else {
+      props.setScanned(false);
+      props.setdataQR(null);
+      props.setMessScanned('Không được phép quét 1 sản phẩm 2 lần !');
       props.setcheck(false);
     }
       
   }, []);
+
+  const handleAPI = async () => {
+
+    if (value === null) {
+      return Alert.alert('Vui lòng chọn địa chỉ');
+    }
+
+    const getkey = await store.getData();
+
+    const alphabet = 'abcdefghijklmnopqrstuvwxyz';
+    let randomString = '';
+
+    for (let i = 0; i < 5; i++) {
+      const randomIndex = Math.floor(Math.random() * alphabet.length);
+      const randomChar = alphabet[randomIndex];
+      randomString += randomChar;
+    }
+    
+    let arrtamp = [];
+    Data.map((item) => {
+      arrtamp.push({MASP: item.id, SOLUONG: item.soluong});
+    });
+
+    // console.log(arrtamp); 
+
+    const response = await axios.post(`${pathURL}/api/addphieu`, 
+    {
+      "sophieu": randomString.toUpperCase(),
+      "madiachi": value,
+      "info_sp": arrtamp
+    }, 
+    {
+      headers: {
+        "Accept": "application/json",
+        "Content-Type" : "application/json",
+        "Access-Control-Allow-Origin": "*",
+        "Authorization": getkey
+      }
+    });
+
+    if (response.data.errors === 1) {
+      console.log(response.data.message);
+    }
+    else {
+      Alert.alert(response.data.message);
+      props.ResetData();
+      props.setScanned(false);
+      props.setdataQR(null);
+      props.setcheck(false);
+    }
+
+  };
   
   return (
     <View style={styles.containerMain}>
-      <Text style={styles.productName}>Danh sách sản phẩm</Text>
-      <FlatList
-        data={Data}
-        renderItem={({item}) => <Listsp id={item.id} nameSP={item.title} Soluong={item.soluong} updateData={updateData} />}
-        keyExtractor={item => item.id}
+
+      <Text style={styles.productName}>Danh sách địa chỉ</Text>
+      
+      <DropDownPicker
+        open={open}
+        value={value}
+        items={items}
+        setOpen={setOpen}
+        setValue={setValue}
+        setItems={setItems}
       />
+
       <View style={styles.buttonSubmit}>
         <Button
           title="Nhập Hàng"
           color="#ffa500"
-          onPress={() => Alert.alert('nhập hàng thành công')}
+          onPress={handleAPI}
         />
         <Button
           title="Thêm sản phẩm"
@@ -131,6 +199,15 @@ export default function Phieu (props) {
           onPress={handleData_Next}
         />
       </View>
+
+      <ScrollView>
+
+        <Text style={styles.productName}>Danh sách sản phẩm</Text>
+
+        { Data.map(item => <Listsp key={item.id} id={item.id} nameSP={item.title} Soluong={item.soluong} updateData={updateData} />) }
+      
+      </ScrollView>
+
     </View>
   );
 
@@ -139,7 +216,7 @@ export default function Phieu (props) {
   const styles = StyleSheet.create({
     container: {
       backgroundColor: '#fff',
-      padding: 20,
+      padding: 10,
       borderRadius: 10,
       elevation: 2,
       shadowColor: '#000',
@@ -149,9 +226,9 @@ export default function Phieu (props) {
     },
     containerMain: {
       padding: 10,
-      paddingTop: 20,
     },
     productName: {
+      paddingTop: 10,
       fontSize: 18,
       fontWeight: 'bold',
       marginBottom: 10,
@@ -165,6 +242,6 @@ export default function Phieu (props) {
       justifyContent: 'space-between',
     },
     buttonSubmit: {
-      paddingTop: 50,
+      paddingTop: 5,
     },
   });
